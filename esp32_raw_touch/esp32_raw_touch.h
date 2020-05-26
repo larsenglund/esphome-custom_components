@@ -10,7 +10,7 @@ namespace esp32_raw_touch {
 
 class ESP32RawTouchSensor;
 
-class ESP32RawTouchComponent : public sensor::Sensor, public PollingComponent {
+class ESP32RawTouchComponent : public Component {
  public:
   void register_touch_pad(ESP32RawTouchSensor *pad) { children_.push_back(pad); }
   
@@ -32,21 +32,15 @@ class ESP32RawTouchComponent : public sensor::Sensor, public PollingComponent {
 
   void set_voltage_attenuation(touch_volt_atten_t voltage_attenuation) { voltage_attenuation_ = voltage_attenuation; }
   
-  /// Update touch values.
-  void update() override;
-  
-  /// Setup touch
   void setup() override;
-  
   void dump_config() override;
-  
+  void loop() override;
   float get_setup_priority() const override { return setup_priority::DATA; }
   
-  // void loop() override;
   void on_shutdown() override;
 
  protected:
- /// Is the IIR filter enabled?
+  /// Is the IIR filter enabled?
   bool iir_filter_enabled_() const { return iir_filter_ > 0; }
 
   uint16_t sleep_cycle_{};
@@ -59,17 +53,19 @@ class ESP32RawTouchComponent : public sensor::Sensor, public PollingComponent {
   uint32_t setup_mode_last_log_print_{};
   uint32_t iir_filter_{0};
   
-  touch_pad_t touch_pad_;
-  uint16_t value_;
+  //touch_pad_t touch_pad_;
+  //uint16_t value_;
 };
 
 /// Simple helper class to expose a touch pad value as a sensor.
-class ESP32RawTouchSensor : public sensor::Sensor {
+class ESP32RawTouchSensor : public sensor::Sensor, public PollingComponent {
  public:
   ESP32RawTouchSensor(const std::string &name, touch_pad_t touch_pad);
 
   touch_pad_t get_touch_pad() const { return touch_pad_; }
   uint16_t get_value() const { return value_; }
+
+  void update() override;
 
  protected:
   friend ESP32RawTouchComponent;

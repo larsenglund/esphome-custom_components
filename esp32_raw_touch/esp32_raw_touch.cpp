@@ -106,9 +106,9 @@ ESP_LOGCONFIG(TAG, "Config for ESP32 Touch Hub:");
   }
 }
 
-void ESP32RawTouchComponent::update() {
+void ESP32RawTouchComponent::loop() {
   const uint32_t now = millis();
-  bool should_print = this->setup_mode_ && now - this->setup_mode_last_log_print_ > 250;
+  bool should_print = this->setup_mode_ && now - this->setup_mode_last_log_print_ > 3000;
   for (auto *child : this->children_) {
     uint16_t value;
     if (this->iir_filter_enabled_()) {
@@ -118,7 +118,7 @@ void ESP32RawTouchComponent::update() {
     }
 
     child->value_ = value;
-    child->publish_state(value);
+    //child->publish_state(value);
 
     if (should_print) {
       ESP_LOGD(TAG, "Touch Pad '%s' (T%u): %u", child->get_name().c_str(), child->get_touch_pad(), value);
@@ -141,6 +141,11 @@ void ESP32RawTouchComponent::on_shutdown() {
 
 ESP32RawTouchSensor::ESP32RawTouchSensor(const std::string &name, touch_pad_t touch_pad)
     : Sensor(name), touch_pad_(touch_pad) {}
+
+void ESP32RawTouchSensor::update() {
+    this->publish_state(this->get_value());
+    ESP_LOGD(TAG, "Touch Pad Sensor '%s' (T%u): %u", this->get_name().c_str(), this->get_touch_pad(), this->get_value());
+}
 
 }  // namespace esp32_raw_touch
 }  // namespace esphome
